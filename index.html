@@ -1,0 +1,776 @@
+<title>RU ↔ ZH Переводчик</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<style>
+/* ─── DESIGN TOKENS ─────────────────────────────────────────
+   Layout: full-height app, two-button split, result center
+   Color: near-black base, crimson RU, jade ZH, warm neutral text
+   Type: system UI stack — utility tool, no flourish needed
+─────────────────────────────────────────────────────────── */
+:root {
+  --bg:          #0f1117;
+  --surface:     #181c27;
+  --surface2:    #222739;
+  --border:      #2e3450;
+  --fg:          #e8eaf0;
+  --fg-muted:    #8891b0;
+  --ru:          #d94f4f;
+  --ru-glow:     rgba(217, 79, 79, 0.25);
+  --ru-dim:      #7a2929;
+  --zh:          #38b87c;
+  --zh-glow:     rgba(56, 184, 124, 0.25);
+  --zh-dim:      #1e6345;
+  --accent:      #5b6af0;
+  --error:       #e8834f;
+  --radius:      16px;
+  --radius-btn:  20px;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:       #f0f2f8;
+    --surface:  #ffffff;
+    --surface2: #e8ebf5;
+    --border:   #d0d5e8;
+    --fg:       #1a1e30;
+    --fg-muted: #606888;
+    --ru:       #c0363c;
+    --ru-glow:  rgba(192, 54, 60, 0.15);
+    --ru-dim:   #8a2529;
+    --zh:       #2a9660;
+    --zh-glow:  rgba(42, 150, 96, 0.15);
+    --zh-dim:   #1a5e3c;
+    color-scheme: light;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg:       #f0f2f8;
+  --surface:  #ffffff;
+  --surface2: #e8ebf5;
+  --border:   #d0d5e8;
+  --fg:       #1a1e30;
+  --fg-muted: #606888;
+  --ru:       #c0363c;
+  --ru-glow:  rgba(192, 54, 60, 0.15);
+  --ru-dim:   #8a2529;
+  --zh:       #2a9660;
+  --zh-glow:  rgba(42, 150, 96, 0.15);
+  --zh-dim:   #1a5e3c;
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  padding-left:  max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  overflow: hidden;
+}
+
+/* ─── HEADER ─────────────────────────────────────────────── */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.app-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.theme-toggle {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--fg-muted);
+  font-size: 14px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+  line-height: 1;
+}
+.theme-toggle:hover { background: var(--border); }
+
+/* ─── RESULT AREA ────────────────────────────────────────── */
+.result-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 0;
+  gap: 16px;
+  min-height: 0;
+}
+
+/* Status message */
+.status-msg {
+  font-size: 16px;
+  color: var(--fg-muted);
+  text-align: center;
+  line-height: 1.5;
+  padding: 12px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 380px;
+}
+
+.status-msg.listening {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  color: var(--fg);
+  animation: pulse-border 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50%       { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent); }
+}
+
+/* Result cards */
+.result-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.result-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+
+.result-card.original {
+  border-left: 4px solid var(--ru);
+}
+.result-card.original.zh-src {
+  border-left-color: var(--zh);
+}
+.result-card.translated {
+  border-left: 4px solid var(--zh);
+  background: color-mix(in srgb, var(--zh) 6%, var(--surface));
+}
+.result-card.translated.zh-src {
+  border-left-color: var(--ru);
+  background: color-mix(in srgb, var(--ru) 6%, var(--surface));
+}
+
+.card-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-bottom: 6px;
+}
+
+.card-text {
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--fg);
+  word-break: break-word;
+}
+
+/* Error */
+.error-box {
+  background: color-mix(in srgb, var(--error) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--error) 40%, transparent);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  font-size: 15px;
+  color: var(--fg);
+  text-align: center;
+  line-height: 1.5;
+  width: 100%;
+  max-width: 380px;
+}
+
+/* Loading dots */
+.translating-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: bounce 1.2s ease-in-out infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%           { transform: scale(1);   opacity: 1; }
+}
+
+/* ─── BUTTON ZONE ────────────────────────────────────────── */
+.btn-zone {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px 0 20px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+}
+
+.mic-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 12px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transition: transform 0.12s, box-shadow 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.mic-btn:active { transform: scale(0.96); }
+
+.mic-btn .flag {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.mic-btn .mic-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.mic-btn .btn-label {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* Russian button */
+.btn-ru {
+  background: color-mix(in srgb, var(--ru) 12%, var(--surface));
+  border-color: var(--ru-dim);
+  color: var(--fg);
+}
+.btn-ru:hover  { background: color-mix(in srgb, var(--ru) 20%, var(--surface)); }
+.btn-ru.active {
+  background: var(--ru-glow);
+  border-color: var(--ru);
+  box-shadow: 0 0 0 4px var(--ru-glow), inset 0 0 0 1px var(--ru);
+  animation: mic-pulse-ru 1s ease-in-out infinite;
+}
+
+/* Chinese button */
+.btn-zh {
+  background: color-mix(in srgb, var(--zh) 12%, var(--surface));
+  border-color: var(--zh-dim);
+  color: var(--fg);
+}
+.btn-zh:hover  { background: color-mix(in srgb, var(--zh) 20%, var(--surface)); }
+.btn-zh.active {
+  background: var(--zh-glow);
+  border-color: var(--zh);
+  box-shadow: 0 0 0 4px var(--zh-glow), inset 0 0 0 1px var(--zh);
+  animation: mic-pulse-zh 1s ease-in-out infinite;
+}
+
+.mic-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@keyframes mic-pulse-ru {
+  0%, 100% { box-shadow: 0 0 0 4px var(--ru-glow); }
+  50%       { box-shadow: 0 0 0 10px transparent; }
+}
+@keyframes mic-pulse-zh {
+  0%, 100% { box-shadow: 0 0 0 4px var(--zh-glow); }
+  50%       { box-shadow: 0 0 0 10px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-msg.listening,
+  .mic-btn.active,
+  .dot { animation: none; }
+}
+
+/* ─── HINT BAR ───────────────────────────────────────────── */
+.hint-bar {
+  text-align: center;
+  font-size: 12px;
+  color: var(--fg-muted);
+  padding: 0 0 max(12px, env(safe-area-inset-bottom, 0px));
+  flex-shrink: 0;
+}
+
+/* ─── NOT SUPPORTED ──────────────────────────────────────── */
+.not-supported-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 16px;
+  padding: 24px;
+}
+
+.not-supported-screen .big-icon { font-size: 56px; }
+.not-supported-screen h2 { font-size: 20px; margin: 0; }
+.not-supported-screen p { font-size: 15px; color: var(--fg-muted); margin: 0; line-height: 1.6; }
+</style>
+
+<!-- App Shell -->
+<header class="app-header">
+  <span class="app-title">🌐 RU ↔ ZH Переводчик</span>
+  <button class="theme-toggle" id="themeToggle" title="Тема">☀️</button>
+</header>
+
+<!-- Result / Status Area -->
+<main class="result-area" id="resultArea">
+  <!-- Начальное состояние -->
+  <div class="status-msg" id="statusMsg">
+    👆 Нажмите кнопку и говорите
+  </div>
+
+  <!-- Анимация перевода -->
+  <div class="translating-msg" id="translatingMsg" hidden>
+    <div class="dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="status-msg" style="border:none;background:none;padding:4px 0">Перевожу...</div>
+  </div>
+
+  <!-- Результат -->
+  <div class="result-cards" id="resultCards" hidden>
+    <div class="result-card original" id="cardOriginal">
+      <div class="card-label" id="labelOriginal">Оригинал</div>
+      <div class="card-text" id="textOriginal"></div>
+    </div>
+    <div class="result-card translated" id="cardTranslated">
+      <div class="card-label" id="labelTranslated">Перевод</div>
+      <div class="card-text" id="textTranslated"></div>
+    </div>
+  </div>
+
+  <!-- Ошибка -->
+  <div class="error-box" id="errorBox" hidden></div>
+
+  <!-- Не поддерживается -->
+  <div class="not-supported-screen" id="notSupportedScreen" hidden>
+    <div class="big-icon">🚫</div>
+    <h2>Браузер не поддерживается</h2>
+    <p>Откройте эту страницу в <strong>Chrome</strong> на Android.<br>
+    Safari и Firefox не поддерживают распознавание голоса.</p>
+  </div>
+</main>
+
+<!-- Buttons -->
+<div class="btn-zone" id="btnZone">
+  <button class="mic-btn btn-ru" id="btnRu">
+    <span class="flag">🇷🇺</span>
+    <span class="mic-icon">🎙️</span>
+    <span>Говорю по-русски</span>
+    <span class="btn-label">→ 中文</span>
+  </button>
+  <button class="mic-btn btn-zh" id="btnZh">
+    <span class="flag">🇨🇳</span>
+    <span class="mic-icon">🎙️</span>
+    <span>说普通话</span>
+    <span class="btn-label">→ Русский</span>
+  </button>
+</div>
+
+<div class="hint-bar" id="hintBar">Говорит один человек за раз</div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════════════
+// TRANSLATION MODULE
+// ══════════════════════════════════════════════════════════════
+function createTranslationModule(fetchImpl) {
+  const BASE_URL   = 'https://api.mymemory.translated.net/get';
+  const MAX_CHARS  = 500;
+  const TIMEOUT_MS = 8000;
+  const EMAIL      = 'fotovideo3030@gmail.com';
+
+  const LANG_MAP = { ru: 'ru', zh: 'zh-CN' };
+
+  class ValidationError extends Error {
+    constructor(msg) { super(msg); this.name = 'ValidationError'; }
+  }
+  class NetworkError extends Error {
+    constructor(msg) { super(msg); this.name = 'NetworkError'; }
+  }
+
+  async function translate(text, from, to) {
+    if (!text || text.trim() === '') throw new ValidationError('Пустой текст');
+
+    let query = text.trim().slice(0, MAX_CHARS);
+    const langpair = `${LANG_MAP[from]}|${LANG_MAP[to]}`;
+    const url = `${BASE_URL}?q=${encodeURIComponent(query)}&langpair=${encodeURIComponent(langpair)}&de=${EMAIL}`;
+
+    const fetchPromise = fetchImpl(url).then(async res => {
+      if (!res.ok) throw new NetworkError(`HTTP ${res.status}`);
+      const data = await res.json();
+      const translated = data?.responseData?.translatedText;
+      if (!translated) throw new NetworkError('Пустой ответ API');
+      return { translated, source: query };
+    });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new NetworkError('Таймаут запроса')), TIMEOUT_MS)
+    );
+
+    try {
+      return await Promise.race([fetchPromise, timeoutPromise]);
+    } catch (err) {
+      if (err instanceof ValidationError) throw err;
+      throw new NetworkError(err.message);
+    }
+  }
+
+  return { translate };
+}
+
+// ══════════════════════════════════════════════════════════════
+// SPEECH MODULE
+// ══════════════════════════════════════════════════════════════
+function createSpeechModule(SpeechRecognitionImpl) {
+  let _recognition    = null;
+  let _onResult       = null;
+  let _onError        = null;
+  let _shouldRestart  = false; // iOS Safari fix: перезапуск при раннем обрыве
+
+  const ERROR_MAP = {
+    'not-allowed':           'PERMISSION_DENIED',
+    'audio-capture':         'PERMISSION_DENIED',
+    'service-not-allowed':   'PERMISSION_DENIED',
+    'network':               'NETWORK_ERROR',
+    'bad-grammar':           'NETWORK_ERROR',
+    'language-not-supported':'NETWORK_ERROR',
+  };
+
+  function isSupported() {
+    return Boolean(SpeechRecognitionImpl);
+  }
+
+  function onResult(cb)  { _onResult = cb; }
+  function onError(cb)   { _onError  = cb; }
+
+  function start(lang) {
+    if (_recognition) { try { _recognition.abort(); } catch(e){} }
+    _shouldRestart = true;
+
+    if (!isSupported()) {
+      if (_onError) _onError({ code: 'NOT_SUPPORTED' });
+      return;
+    }
+
+    _recognition = new SpeechRecognitionImpl();
+    _recognition.lang           = lang;
+    _recognition.continuous     = false;
+    _recognition.interimResults = true;
+    _recognition.maxAlternatives = 1;
+
+    _recognition.addEventListener('result', e => {
+      const res = e.results[0];
+      if (res.isFinal && _onResult) {
+        _shouldRestart = false; // результат получен — перезапуск не нужен
+        const t = res[0].transcript.trim();
+        if (t) _onResult(t);
+      }
+    });
+
+    _recognition.addEventListener('error', e => {
+      if (e.error === 'no-speech') return; // тихо игнорируем
+      const code = ERROR_MAP[e.error] || 'NETWORK_ERROR';
+      if (_onError) _onError({ code, originalError: e.error });
+    });
+
+    _recognition.addEventListener('end', () => {
+      // iOS Safari обрывает запись после ~5 сек тишины.
+      // Если флаг активен — перезапускаем, не меняя UI (пользователь ещё говорит)
+      if (_shouldRestart) {
+        try { _recognition.start(); } catch(e) {}
+      }
+    });
+
+    try { _recognition.start(); }
+    catch(e) {
+      if (_onError) _onError({ code: 'NETWORK_ERROR', originalError: e.message });
+    }
+  }
+
+  function stop() {
+    _shouldRestart = false; // явная остановка — не перезапускать
+    if (_recognition) {
+      try { _recognition.abort(); } catch(e){}
+      _recognition = null;
+    }
+  }
+
+  return { isSupported, start, stop, onResult, onError };
+}
+
+// ══════════════════════════════════════════════════════════════
+// UI MODULE
+// ══════════════════════════════════════════════════════════════
+function createUIModule(els) {
+  const ERROR_TEXTS = {
+    PERMISSION_DENIED:  '🎙️ Нет доступа к микрофону.\nРазрешите доступ в настройках браузера.',
+    NETWORK_ERROR:      '📡 Нет соединения с интернетом.\nПроверьте подключение и попробуйте снова.',
+    TRANSLATION_FAILED: '⚠️ Ошибка перевода. Попробуйте ещё раз.',
+    NOT_SUPPORTED:      null, // обрабатывается отдельным экраном
+  };
+
+  function _hideAll() {
+    els.statusMsg.hidden      = true;
+    els.translatingMsg.hidden = true;
+    els.resultCards.hidden    = true;
+    els.errorBox.hidden       = true;
+  }
+
+  function showIdle() {
+    _hideAll();
+    els.statusMsg.textContent = '👆 Нажмите кнопку и говорите';
+    els.statusMsg.className   = 'status-msg';
+    els.statusMsg.hidden      = false;
+    _resetButtons();
+  }
+
+  function showListening(lang) {
+    _hideAll();
+    els.statusMsg.textContent = lang === 'ru'
+      ? '🎙️ Слушаю... говорите по-русски'
+      : '🎙️ 听着... 请说普通话';
+    els.statusMsg.className = 'status-msg listening';
+    els.statusMsg.hidden = false;
+    _setActive(lang);
+  }
+
+  function showTranslating() {
+    _hideAll();
+    els.translatingMsg.hidden = false;
+    _disableAll();
+  }
+
+  function showResult(original, translated, direction) {
+    _hideAll();
+    const isRuZh = direction === 'ru-zh';
+
+    els.cardOriginal.className  = `result-card original${isRuZh ? '' : ' zh-src'}`;
+    els.cardTranslated.className = `result-card translated${isRuZh ? '' : ' zh-src'}`;
+
+    els.labelOriginal.textContent  = isRuZh ? '🇷🇺 Вы сказали' : '🇨🇳 对方说';
+    els.labelTranslated.textContent = isRuZh ? '🇨🇳 Перевод' : '🇷🇺 Перевод';
+
+    els.textOriginal.textContent   = original;
+    els.textTranslated.textContent = translated;
+
+    els.resultCards.hidden = false;
+    _resetButtons();
+  }
+
+  function showError(type) {
+    if (type === 'NOT_SUPPORTED') {
+      els.btnZone.hidden          = true;
+      els.hintBar.hidden          = true;
+      els.notSupportedScreen.hidden = false;
+      return;
+    }
+    _hideAll();
+    els.errorBox.textContent = ERROR_TEXTS[type] || ERROR_TEXTS.NETWORK_ERROR;
+    els.errorBox.hidden = false;
+    _resetButtons();
+  }
+
+  function setButtonState(btn, state) {
+    const el = btn === 'ru' ? els.btnRu : els.btnZh;
+    if (!el) return;
+    el.disabled = (state === 'disabled');
+    el.classList.toggle('active', state === 'active');
+  }
+
+  function _setActive(lang) {
+    setButtonState('ru', lang === 'ru' ? 'active' : 'idle');
+    setButtonState('zh', lang === 'zh' ? 'active' : 'idle');
+  }
+
+  function _resetButtons() {
+    setButtonState('ru', 'idle');
+    setButtonState('zh', 'idle');
+  }
+
+  function _disableAll() {
+    setButtonState('ru', 'disabled');
+    setButtonState('zh', 'disabled');
+  }
+
+  return { showIdle, showListening, showTranslating, showResult, showError, setButtonState };
+}
+
+// ══════════════════════════════════════════════════════════════
+// APP CONTROLLER
+// ══════════════════════════════════════════════════════════════
+function createAppController(deps) {
+  const { SpeechRecognition, fetchImpl, ui } = deps;
+
+  const STATES = { IDLE:'IDLE', LISTENING:'LISTENING', TRANSLATING:'TRANSLATING', RESULT:'RESULT' };
+  const LANG_CONFIG = {
+    ru: { speechLang:'ru-RU', from:'ru', to:'zh', direction:'ru-zh' },
+    zh: { speechLang:'zh-CN', from:'zh', to:'ru', direction:'zh-ru' },
+  };
+
+  let state = STATES.IDLE;
+  let currentLang = null;
+
+  const speech      = createSpeechModule(SpeechRecognition);
+  const translation = createTranslationModule(fetchImpl);
+
+  if (!speech.isSupported()) {
+    ui.showError('NOT_SUPPORTED');
+    return { handleButtonPress: () => {} };
+  }
+
+  ui.showIdle();
+
+  speech.onResult(async text => {
+    if (state !== STATES.LISTENING) return;
+    state = STATES.TRANSLATING;
+    ui.showTranslating();
+
+    const cfg = LANG_CONFIG[currentLang];
+    try {
+      const result = await translation.translate(text, cfg.from, cfg.to);
+      state = STATES.RESULT;
+      ui.showResult(result.source, result.translated, cfg.direction);
+    } catch (err) {
+      state = STATES.IDLE;
+      ui.showError('TRANSLATION_FAILED');
+    }
+  });
+
+  speech.onError(err => {
+    state = STATES.IDLE;
+    ui.showError(err.code === 'PERMISSION_DENIED' ? 'PERMISSION_DENIED' : 'NETWORK_ERROR');
+  });
+
+  function handleButtonPress(lang) {
+    if (state === STATES.LISTENING || state === STATES.TRANSLATING) {
+      speech.stop();
+    }
+    currentLang = lang;
+    state = STATES.LISTENING;
+    ui.showListening(lang);
+    speech.start(LANG_CONFIG[lang].speechLang);
+  }
+
+  return { handleButtonPress };
+}
+
+// ══════════════════════════════════════════════════════════════
+// BOOTSTRAP
+// ══════════════════════════════════════════════════════════════
+(function init() {
+  const SpeechRecognitionImpl =
+    window.SpeechRecognition || window.webkitSpeechRecognition || null;
+
+  const els = {
+    statusMsg:           document.getElementById('statusMsg'),
+    translatingMsg:      document.getElementById('translatingMsg'),
+    resultCards:         document.getElementById('resultCards'),
+    cardOriginal:        document.getElementById('cardOriginal'),
+    cardTranslated:      document.getElementById('cardTranslated'),
+    labelOriginal:       document.getElementById('labelOriginal'),
+    labelTranslated:     document.getElementById('labelTranslated'),
+    textOriginal:        document.getElementById('textOriginal'),
+    textTranslated:      document.getElementById('textTranslated'),
+    errorBox:            document.getElementById('errorBox'),
+    notSupportedScreen:  document.getElementById('notSupportedScreen'),
+    btnRu:               document.getElementById('btnRu'),
+    btnZh:               document.getElementById('btnZh'),
+    btnZone:             document.getElementById('btnZone'),
+    hintBar:             document.getElementById('hintBar'),
+  };
+
+  const ui  = createUIModule(els);
+  const app = createAppController({
+    SpeechRecognition: SpeechRecognitionImpl,
+    fetchImpl: window.fetch.bind(window),
+    ui,
+  });
+
+  els.btnRu.addEventListener('click', () => app.handleButtonPress('ru'));
+  els.btnZh.addEventListener('click', () => app.handleButtonPress('zh'));
+
+  // Тема
+  const themeBtn = document.getElementById('themeToggle');
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    try { localStorage.setItem('theme', theme); } catch(e){}
+  }
+
+  const savedTheme = (() => { try { return localStorage.getItem('theme'); } catch(e){ return null; } })();
+  if (savedTheme) applyTheme(savedTheme);
+  else themeBtn.textContent = '🌙';
+
+  themeBtn.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
+
+  // Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  }
+})();
+</script>
