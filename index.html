@@ -96,7 +96,7 @@ body {
 }
 
 .app-title {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--fg-muted);
   letter-spacing: 0.04em;
@@ -130,11 +130,11 @@ body {
 
 /* Status message */
 .status-msg {
-  font-size: 16px;
+  font-size: 19px;
   color: var(--fg-muted);
   text-align: center;
   line-height: 1.5;
-  padding: 12px 20px;
+  padding: 16px 20px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -186,7 +186,7 @@ body {
 }
 
 .card-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -195,7 +195,7 @@ body {
 }
 
 .card-text {
-  font-size: 18px;
+  font-size: 22px;
   line-height: 1.5;
   color: var(--fg);
   word-break: break-word;
@@ -258,12 +258,12 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 20px 12px;
+  gap: 10px;
+  padding: 22px 12px;
   border: 2px solid transparent;
   border-radius: var(--radius-btn);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 600;
   letter-spacing: 0.03em;
   transition: transform 0.12s, box-shadow 0.2s, background 0.2s;
@@ -274,17 +274,17 @@ body {
 .mic-btn:active { transform: scale(0.96); }
 
 .mic-btn .flag {
-  font-size: 28px;
+  font-size: 38px;
   line-height: 1;
 }
 
 .mic-btn .mic-icon {
-  font-size: 22px;
+  font-size: 28px;
   line-height: 1;
 }
 
 .mic-btn .btn-label {
-  font-size: 12px;
+  font-size: 15px;
   opacity: 0.8;
   margin-top: 2px;
 }
@@ -488,6 +488,7 @@ function createSpeechModule(SpeechRecognitionImpl) {
   let _onResult       = null;
   let _onError        = null;
   let _shouldRestart  = false; // iOS Safari fix: перезапуск при раннем обрыве
+  let _lastStartTime  = 0;    // защита от петли: минимум 400мс между перезапусками
 
   const ERROR_MAP = {
     'not-allowed':           'PERMISSION_DENIED',
@@ -508,6 +509,7 @@ function createSpeechModule(SpeechRecognitionImpl) {
   function start(lang) {
     if (_recognition) { try { _recognition.abort(); } catch(e){} }
     _shouldRestart = true;
+    _lastStartTime = Date.now();
 
     if (!isSupported()) {
       if (_onError) _onError({ code: 'NOT_SUPPORTED' });
@@ -536,10 +538,20 @@ function createSpeechModule(SpeechRecognitionImpl) {
     });
 
     _recognition.addEventListener('end', () => {
-      // iOS Safari обрывает запись после ~5 сек тишины.
-      // Если флаг активен — перезапускаем, не меняя UI (пользователь ещё говорит)
-      if (_shouldRestart) {
-        try { _recognition.start(); } catch(e) {}
+      // iOS Safari обрывает запись рано.
+      // Перезапускаем только если: флаг активен И прошло не менее 400мс
+      // (защита от петли когда end срабатывает сразу после start)
+      if (_shouldRestart && (Date.now() - _lastStartTime > 400)) {
+        _lastStartTime = Date.now();
+        try { _recognition.start(); } catch(e) {
+          // перезапуск не удался — завершаем корректно
+          _shouldRestart = false;
+          if (_onError) _onError({ code: 'NETWORK_ERROR', originalError: e.message });
+        }
+      } else if (_shouldRestart) {
+        // end пришёл слишком быстро (< 400мс) — это не iOS-обрыв,
+        // значит произошла реальная ошибка; сбрасываем флаг
+        _shouldRestart = false;
       }
     });
 
