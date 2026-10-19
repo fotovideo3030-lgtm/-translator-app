@@ -122,24 +122,23 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
-  padding: 24px 0;
-  gap: 16px;
+  align-items: stretch;
+  padding: 16px 0;
+  gap: 14px;
   min-height: 0;
 }
 
 /* Status message */
 .status-msg {
-  font-size: 19px;
+  font-size: 22px;
   color: var(--fg-muted);
   text-align: center;
   line-height: 1.5;
-  padding: 16px 20px;
+  padding: 24px 20px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   width: 100%;
-  max-width: 380px;
 }
 
 .status-msg.listening {
@@ -158,16 +157,23 @@ body {
 .result-cards {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  max-width: 380px;
+  flex: 1;
+  min-height: 0;
 }
 
 .result-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px 18px;
+  padding: 20px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  overflow: auto;
 }
 
 .result-card.original {
@@ -186,16 +192,16 @@ body {
 }
 
 .card-label {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--fg-muted);
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
 .card-text {
-  font-size: 22px;
+  font-size: 28px;
   line-height: 1.5;
   color: var(--fg);
   word-break: break-word;
@@ -206,13 +212,12 @@ body {
   background: color-mix(in srgb, var(--error) 10%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--error) 40%, transparent);
   border-radius: var(--radius);
-  padding: 14px 18px;
-  font-size: 15px;
+  padding: 24px 20px;
+  font-size: 18px;
   color: var(--fg);
   text-align: center;
   line-height: 1.5;
   width: 100%;
-  max-width: 380px;
 }
 
 /* Loading dots */
