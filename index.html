@@ -157,54 +157,52 @@ body {
 .result-cards {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
   width: 100%;
   flex: 1;
   min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 
 .result-card {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px 20px;
+  padding: 18px 20px 20px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   min-height: 0;
   overflow: auto;
 }
 
 .result-card.original {
-  border-left: 4px solid var(--ru);
-}
-.result-card.original.zh-src {
-  border-left-color: var(--zh);
+  border-bottom: 1px solid var(--border);
 }
 .result-card.translated {
-  border-left: 4px solid var(--zh);
-  background: color-mix(in srgb, var(--zh) 6%, var(--surface));
+  background: color-mix(in srgb, var(--zh) 5%, var(--surface));
 }
 .result-card.translated.zh-src {
-  border-left-color: var(--ru);
-  background: color-mix(in srgb, var(--ru) 6%, var(--surface));
+  background: color-mix(in srgb, var(--ru) 5%, var(--surface));
 }
 
 .card-label {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--fg-muted);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  opacity: 0.7;
 }
 
 .card-text {
-  font-size: 28px;
-  line-height: 1.5;
+  font-size: 36px;
+  line-height: 1.4;
   color: var(--fg);
   word-break: break-word;
+  font-weight: 400;
 }
 
 /* Error */
