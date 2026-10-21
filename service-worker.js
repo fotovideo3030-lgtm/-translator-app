@@ -4,7 +4,7 @@
  * Спека: SPEC.md §5
  */
 
-const CACHE_NAME = 'translator-v1';
+const CACHE_NAME = 'translator-v2';
 
 // Только статика — API-запросы НИКОГДА не кэшируем
 const SHELL_ASSETS = [
