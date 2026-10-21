@@ -1,69 +1,65 @@
 <title>RU ↔ ZH Переводчик</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f1117">
+<meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 
 <style>
-/* ─── DESIGN TOKENS ─────────────────────────────────────────
-   Layout: full-height app, two-button split, result center
-   Color: near-black base, crimson RU, jade ZH, warm neutral text
-   Type: system UI stack — utility tool, no flourish needed
-─────────────────────────────────────────────────────────── */
+/* ─── DESIGN TOKENS — светлая тема по умолчанию ───────── */
 :root {
-  --bg:          #0f1117;
-  --surface:     #181c27;
-  --surface2:    #222739;
-  --border:      #2e3450;
-  --fg:          #e8eaf0;
-  --fg-muted:    #8891b0;
-  --ru:          #d94f4f;
-  --ru-glow:     rgba(217, 79, 79, 0.25);
-  --ru-dim:      #7a2929;
-  --zh:          #38b87c;
-  --zh-glow:     rgba(56, 184, 124, 0.25);
-  --zh-dim:      #1e6345;
-  --accent:      #5b6af0;
-  --error:       #e8834f;
-  --radius:      16px;
-  --radius-btn:  20px;
-  color-scheme: dark;
+  --bg:        #f5f5f5;
+  --surface:   #ffffff;
+  --surface2:  #efefef;
+  --border:    #e0e0e0;
+  --fg:        #111111;
+  --fg-muted:  #888888;
+  --ru:        #c0363c;
+  --ru-glow:   rgba(192, 54, 60, 0.15);
+  --ru-dim:    #f5d5d5;
+  --zh:        #2a9660;
+  --zh-glow:   rgba(42, 150, 96, 0.15);
+  --zh-dim:    #d0f0e0;
+  --accent:    #4a5be0;
+  --error:     #e05000;
+  --radius:    14px;
+  --radius-btn: 18px;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg:       #f0f2f8;
-    --surface:  #ffffff;
-    --surface2: #e8ebf5;
-    --border:   #d0d5e8;
-    --fg:       #1a1e30;
-    --fg-muted: #606888;
-    --ru:       #c0363c;
-    --ru-glow:  rgba(192, 54, 60, 0.15);
-    --ru-dim:   #8a2529;
-    --zh:       #2a9660;
-    --zh-glow:  rgba(42, 150, 96, 0.15);
-    --zh-dim:   #1a5e3c;
-    color-scheme: light;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        #0f1117;
+    --surface:   #181c27;
+    --surface2:  #222739;
+    --border:    #2e3450;
+    --fg:        #e8eaf0;
+    --fg-muted:  #8891b0;
+    --ru:        #d94f4f;
+    --ru-glow:   rgba(217, 79, 79, 0.25);
+    --ru-dim:    #3a1515;
+    --zh:        #38b87c;
+    --zh-glow:   rgba(56, 184, 124, 0.25);
+    --zh-dim:    #0e3325;
+    color-scheme: dark;
   }
 }
 
-:root[data-theme="light"] {
-  --bg:       #f0f2f8;
-  --surface:  #ffffff;
-  --surface2: #e8ebf5;
-  --border:   #d0d5e8;
-  --fg:       #1a1e30;
-  --fg-muted: #606888;
-  --ru:       #c0363c;
-  --ru-glow:  rgba(192, 54, 60, 0.15);
-  --ru-dim:   #8a2529;
-  --zh:       #2a9660;
-  --zh-glow:  rgba(42, 150, 96, 0.15);
-  --zh-dim:   #1a5e3c;
-  color-scheme: light;
+:root[data-theme="dark"] {
+  --bg:        #0f1117;
+  --surface:   #181c27;
+  --surface2:  #222739;
+  --border:    #2e3450;
+  --fg:        #e8eaf0;
+  --fg-muted:  #8891b0;
+  --ru:        #d94f4f;
+  --ru-glow:   rgba(217, 79, 79, 0.25);
+  --ru-dim:    #3a1515;
+  --zh:        #38b87c;
+  --zh-glow:   rgba(56, 184, 124, 0.25);
+  --zh-dim:    #0e3325;
+  color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -189,21 +185,20 @@ body {
 }
 
 .card-label {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--fg-muted);
-  margin-bottom: 8px;
-  opacity: 0.7;
+  margin-bottom: 12px;
 }
 
 .card-text {
-  font-size: 36px;
-  line-height: 1.4;
+  font-size: 40px;
+  line-height: 1.35;
   color: var(--fg);
   word-break: break-word;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 /* Error */
